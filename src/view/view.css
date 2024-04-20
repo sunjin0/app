@@ -1,0 +1,25 @@
+.Login{
+  margin: 15% 30%;
+}
+.code{
+  display: flex;
+  flex-direction: row;
+}
+.code div{
+  border-radius: 5px;
+  margin-left: 1%;
+  border: 1px solid rgba(128, 128, 128, 0.637);
+}
+.dark{
+  background-color: #001529;
+}
+.log{
+  text-align: center;
+  color: white;
+}
+.marginLeft{
+  margin-left: 2%;
+}
+.marginBottom{
+  margin-bottom: 2%;
+}
