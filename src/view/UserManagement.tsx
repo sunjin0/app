@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, FormProps, message, Modal, Select, Space, TableProps, Tooltip } from 'antd';
+import { Button, FormProps, message, Modal,  TableProps, Tooltip } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import userService from "../service/user"
 import "./view.css"

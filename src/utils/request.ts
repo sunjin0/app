@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const instance = axios.create({
   baseURL: 'http://127.0.0.1:8080', // 设置基础URL
-  timeout: 5000, // 设置请求超时时间
+  // timeout: 5000, // 设置请求超时时间
 })
 
 // 添加请求拦截器
@@ -10,7 +10,7 @@ instance.interceptors.request.use(
   function (config) {
     // 在发送请求之前做些什么
     let token = localStorage.getItem('token')
-    if (token !== undefined) {
+    if (token !== undefined||token!==null) {
       config.headers.token = token
     }
     return config

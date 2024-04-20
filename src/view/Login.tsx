@@ -26,13 +26,11 @@ const Login: React.FC = () => {
       img.current = res.url;
       setCode(res.code);
     });
-    const token=localStorage.getItem("token");
-    console.log(token);
-    
-    if ( token!== undefined) {
-      history.push("/dashboard")
-    }else{
+    const token = localStorage.getItem("token");
+    if (token === undefined || token === null) {
       history.push("/")
+    } else {
+      history.push("/dashboard")
     }
 
   }, []);

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   HomeFilled
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme } from 'antd';
-import { Link, Route, BrowserRouter as Router } from 'react-router-dom';
+import { Link, Route, BrowserRouter as Router, useHistory } from 'react-router-dom';
 import RoleResources from './RoleResourcesManagement';
 import Resources from './ResourcesManagement';
 import Role from './RoleManagement';
@@ -14,6 +14,15 @@ import User from './UserManagement';
 const { Header, Sider, Content } = Layout;
 
 const Dashboard: React.FC = () => {
+  const history = useHistory();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token === undefined || token === null) {
+      history.push("/")
+    } else {
+      history.push("/dashboard")
+    }
+  }, [])
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -26,7 +35,7 @@ const Dashboard: React.FC = () => {
           <Menu
             theme="dark"
             mode="inline"
-            defaultSelectedKeys={['1']}>
+          >
             <Menu.Item key="1"><Link to="/dashboard"><HomeFilled /><span>首页</span></Link></Menu.Item>
             <Menu.Item key="2"><Link to="/user/management"><HomeFilled /><span>用户管理</span></Link></Menu.Item>
             <Menu.Item key="3"><Link to="/role/management"><HomeFilled /><span>角色管理</span></Link></Menu.Item>
