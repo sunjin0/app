@@ -51,7 +51,7 @@ const Login: React.FC = () => {
         })
       return;
     }
-    login(values).then(res => {
+    login(values).then((res:any) => {
       console.log(res);
 
       if (res.code === "200") {
@@ -60,7 +60,8 @@ const Login: React.FC = () => {
             type: 'info',
             content: "登陆成功",
           })
-        history.push("/dashboard")
+        history.push("/dashboard");
+        localStorage.setItem("path",JSON.stringify(res.data.path))
       } else {
         messageApi.open(
           {

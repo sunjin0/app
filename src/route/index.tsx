@@ -20,7 +20,7 @@ const routes: RouteConfig = [
     path: '/dashboard',
     exact: true,
     component: Dashboard,
-    children:[{
+    children: [ {
       name: "用户管理",
       path: '/user/management',
       exact: true,
@@ -49,13 +49,15 @@ const routes: RouteConfig = [
   
     },]
   },
+ 
+
   // {
   //   name: '404',
   //   path: '*',
   //   exact: true,
   //   component: ()=>{return<h1>404 找不到页面....</h1>},
   // }
-  
+
 
 
 

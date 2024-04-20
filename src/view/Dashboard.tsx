@@ -6,7 +6,6 @@ import {
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme } from 'antd';
 import { Link, Route, BrowserRouter as Router, useHistory } from 'react-router-dom';
-import RoleResources from './RoleResourcesManagement';
 import Resources from './ResourcesManagement';
 import Role from './RoleManagement';
 import User from './UserManagement';
@@ -15,6 +14,7 @@ const { Header, Sider, Content } = Layout;
 
 const Dashboard: React.FC = () => {
   const history = useHistory();
+  const [paths, setPaths] = useState([])
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token === undefined || token === null) {
@@ -22,25 +22,34 @@ const Dashboard: React.FC = () => {
     } else {
       history.push("/dashboard")
     }
+    setPaths(JSON.parse(localStorage.getItem("path") || ""));
   }, [])
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+  const exit = () => {
+    localStorage.removeItem("token");
+    history.push("/")
+  }
   return (
-    <Layout>
-      <Router>
+    <Router>
+      <Layout>
+
         <Sider trigger={null} collapsible collapsed={collapsed}>
           <h1 className='log'>Demo</h1>
           <Menu
             theme="dark"
             mode="inline"
+            defaultSelectedKeys={['9']}
           >
-            <Menu.Item key="1"><Link to="/dashboard"><HomeFilled /><span>首页</span></Link></Menu.Item>
-            <Menu.Item key="2"><Link to="/user/management"><HomeFilled /><span>用户管理</span></Link></Menu.Item>
-            <Menu.Item key="3"><Link to="/role/management"><HomeFilled /><span>角色管理</span></Link></Menu.Item>
-            <Menu.Item key="4"><Link to="/resources/management"><HomeFilled /><span>权限管理</span></Link></Menu.Item>
-            <Menu.Item key="5"><Link to="/role-resources/management"><HomeFilled /><span>权限分配</span></Link></Menu.Item>
+            <Menu.Item key="9"><Link to="/"><HomeFilled /><span>首页</span></Link></Menu.Item>
+            {
+              paths.map((item: any, index) => (
+                // 注意：map 方法中需要提供一个唯一的 key 属性
+                <Menu.Item key={index}><Link to={item.path}><HomeFilled /><span>{item.description}</span></Link></Menu.Item>
+              ))
+            }
           </Menu>
         </Sider>
         <Layout>
@@ -55,6 +64,7 @@ const Dashboard: React.FC = () => {
                 height: 64,
               }}
             />
+            <Button onClick={exit}>退出</Button>
           </Header>
           <Content
             style={{
@@ -68,12 +78,12 @@ const Dashboard: React.FC = () => {
             <Route path="/user/management" render={() => (<User />)} />
             <Route path="/role/management" render={() => (<Role />)} />
             <Route path="/resources/management" render={() => (<Resources />)} />
-            <Route path="/role-resources/management" render={() => (<RoleResources />)} />
           </Content>
 
         </Layout>
-      </Router>
-    </Layout>
+
+      </Layout>
+    </Router>
   );
 };
 

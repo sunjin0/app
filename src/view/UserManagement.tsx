@@ -83,10 +83,19 @@ const User: React.FC = () => {
   // 表格代码
   const [data, setData] = useState(originData);
   useEffect(() => {
-    userService.queryPage({}).then((res: any) => {
-      setData(res.data.list)
-    })
-  }, [])
+    const init =async ()=>{
+     const {data,code}=await userService.queryPage({});
+     if(code==="403"){
+      messageApi.open({
+        type:"warning",
+        content:data
+      })
+      return;
+     }
+     setData(data.list)
+    }
+    init();
+  }, []);
   const onFinish: FormProps<FieldType>["onFinish"] = (values: FieldType) => {
     console.log('Failed:', values);
     if (values.id === undefined && values.userName === undefined) {
