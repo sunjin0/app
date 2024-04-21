@@ -9,3 +9,26 @@ export  class result {
     this.data = data;
   }
 }
+export type resources = {
+  current: string,
+  description: string,
+  id: string,
+  routeId: string,
+  size: string,
+  urls: string
+}
+export type role = {
+  current: string,
+  description: string,
+  id: string,
+  name: string,
+  size: string
+}
+export type route = {
+  current: string,
+  description: string,
+  id: string,
+  parentId: string,
+  path: string,
+  size: string
+}

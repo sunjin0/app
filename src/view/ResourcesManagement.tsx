@@ -4,6 +4,7 @@ import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import resourceService from "../service/resources"
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
+import { resources, role, route } from '../component';
 
 //字段
 type FieldType = {
@@ -18,29 +19,7 @@ type UserRoleField = {
 const onFinishFailed: FormProps<any>["onFinishFailed"] = (errorInfo: any) => {
   console.log('Failed:', errorInfo);
 };
-type resources = {
-  current: string,
-  description: string,
-  id: string,
-  routeId: string,
-  size: string,
-  urls: string
-}
-type role = {
-  current: string,
-  description: string,
-  id: string,
-  name: string,
-  size: string
-}
-type route = {
-  current: string,
-  description: string,
-  id: string,
-  parentId: string,
-  path: string,
-  size: string
-}
+
 interface Item {
   routes: Array<route>,
   role: Array<role>,

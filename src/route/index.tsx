@@ -9,7 +9,7 @@ const Dashboard = React.lazy(() => import('../view/Dashboard'))
 const User = React.lazy(() => import('../view/UserManagement'))
 const Role = React.lazy(() => import('../view/RoleManagement'))
 const Resources = React.lazy(() => import('../view/ResourcesManagement'))
-const RoleResources = React.lazy(() => import('../view/RoleResourcesManagement'))
+const RoleResources = React.lazy(() => import('../view/RouteManagement'))
 const routes: RouteConfig = [
   {
     path: '/',
@@ -43,7 +43,7 @@ const routes: RouteConfig = [
     },
     {
       name: '权限分配',
-      path: '/role-resources/management',
+      path: '/role_route/management',
       exact: true,
       component: RoleResources,
   
