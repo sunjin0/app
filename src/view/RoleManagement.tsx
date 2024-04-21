@@ -84,18 +84,19 @@ const Role: React.FC = () => {
   // 表格代码
   const [data, setData] = useState(originData);
   //初始化数据
-  useEffect( () => {
-    roleService.queryPage({}).then((res: any) => {
-     setData(res.data.list)
-    })
+  useEffect(() => {
+    init()
   }, []);
+  const init = () => {
+    roleService.queryPage({}).then((res: any) => {
+      setData(res.data.list)
+    })
+  }
   //查询
   const onFinish: FormProps<FieldType>["onFinish"] = (values: FieldType) => {
     console.log('Failed:', values);
     if (values.description === undefined && values.name === undefined) {
-      roleService.queryPage({}).then((res: any) => {
-        setData(res.data.list)
-      })
+      init();
       return;
     }
     roleService.queryPage({ description: values.description, name: values.name }).then((res: any) => {
@@ -113,12 +114,13 @@ const Role: React.FC = () => {
       })
       return;
     }
-    const { message } = await roleService.save(values)
+    const { message } = await roleService.save(values);
+    handleCancel();
     messageApi.open({
       type: "success",
       content: message
     })
-    handleCancel();
+    init();
   };
   const [form] = Form.useForm();
 
@@ -137,7 +139,8 @@ const Role: React.FC = () => {
       messageApi.open({
         type: "success",
         content: message
-      })
+      });
+      init();
     } else {
       // 用户点击了取消按钮，不执行删除操作
     }

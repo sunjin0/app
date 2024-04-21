@@ -17,7 +17,7 @@ instance.interceptors.request.use(
   },
   function (error) {
     // 对请求错误做些什么
-    return Promise.reject(error)
+    console.log(error);
   }
 )
 
@@ -29,7 +29,8 @@ instance.interceptors.response.use(
   },
   function (error) {
     // 对响应错误做点什么
-    return Promise.reject(error)
+   console.log(error);
+   
   }
 )
 

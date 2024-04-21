@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, FormProps, message, Modal,  TableProps, Tooltip } from 'antd';
+import { Button, FormProps, message, Modal, TableProps, Tooltip } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import userService from "../service/user"
 import "./view.css"
@@ -82,26 +82,25 @@ const User: React.FC = () => {
 
   // 表格代码
   const [data, setData] = useState(originData);
-  useEffect(() => {
-    const init =async ()=>{
-     const {data,code}=await userService.queryPage({});
-     if(code==="403"){
+  const init = async () => {
+    const { data, code } = await userService.queryPage({});
+    if (code === "403") {
       messageApi.open({
-        type:"warning",
-        content:data
+        type: "warning",
+        content: data
       })
       return;
-     }
-     setData(data.list)
     }
+    setData(data.list)
+  }
+  useEffect(() => {
+
     init();
   }, []);
   const onFinish: FormProps<FieldType>["onFinish"] = (values: FieldType) => {
     console.log('Failed:', values);
     if (values.id === undefined && values.userName === undefined) {
-      userService.queryPage({}).then((res: any) => {
-        setData(res.data.list)
-      })
+      init();
       return;
     }
     userService.queryPage({ id: values.id, userName: values.userName }).then((res: any) => {
@@ -120,11 +119,13 @@ const User: React.FC = () => {
       return;
     }
     const { message } = await userService.save(values)
+    handleCancel();
     messageApi.open({
       type: "success",
       content: message
     })
-    handleCancel();
+    init();
+
   };
   const [form] = Form.useForm();
 
@@ -143,7 +144,8 @@ const User: React.FC = () => {
       messageApi.open({
         type: "success",
         content: message
-      })
+      });
+      init();
     } else {
       // 用户点击了取消按钮，不执行删除操作
     }
@@ -280,10 +282,10 @@ const User: React.FC = () => {
             <Input></Input>
           </Form.Item>
 
-            <Button type="primary"  htmlType="submit" >
-              提交
-            </Button>
-    
+          <Button type="primary" htmlType="submit" >
+            提交
+          </Button>
+
         </Form>
       </Modal>
       <Form className="marginBottom" initialValues={{ remember: true }}

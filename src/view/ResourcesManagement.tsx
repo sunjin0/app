@@ -8,21 +8,50 @@ import { SearchOutlined } from "@ant-design/icons"
 //字段
 type FieldType = {
   id: string;
-  name?: string;
-  description: string;
+  userName?: string;
 };
+type UserRoleField = {
+  userId: string,
+  roleId: string
+}
 
-const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo: any) => {
+const onFinishFailed: FormProps<any>["onFinishFailed"] = (errorInfo: any) => {
   console.log('Failed:', errorInfo);
 };
-
-interface Item {
-  id: string;
-  name?: string;
-  description: string;
+type resources = {
+  current: string,
+  description: string,
+  id: string,
+  routeId: string,
+  size: string,
+  urls: string
 }
+type role = {
+  current: string,
+  description: string,
+  id: string,
+  name: string,
+  size: string
+}
+type route = {
+  current: string,
+  description: string,
+  id: string,
+  parentId: string,
+  path: string,
+  size: string
+}
+interface Item {
+  routes: Array<route>,
+  role: Array<role>,
+  resources: Array<resources>,
+  id: string,
+  username: string,
+  userRoleId: Array<string>
+}
+
 //表格数据
-const originData: any[] = [];
+const originData: Item[] = [];
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   editing: boolean;
@@ -76,7 +105,11 @@ const Resources: React.FC = () => {
     setOpen(true);
   };
 
-
+  const init = () => {
+    resourceService.queryPage({}).then((res: any) => {
+      setData(res.data.list)
+    })
+  }
   const handleCancel = () => {
     setOpen(false);
   };
@@ -84,41 +117,46 @@ const Resources: React.FC = () => {
   // 表格代码
   const [data, setData] = useState(originData);
   //初始化数据
-  useEffect( () => {
-    resourceService.queryPage({}).then((res: any) => {
-     setData(res.data.list)
-    })
+  useEffect(() => {
+    init()
   }, []);
   //查询
   const onFinish: FormProps<FieldType>["onFinish"] = (values: FieldType) => {
     console.log('Failed:', values);
-    if (values.description === undefined && values.name === undefined) {
-      resourceService.queryPage({}).then((res: any) => {
-        setData(res.data.list)
-      })
+    if (values.id === undefined && values.userName === undefined) {
+      init()
       return;
     }
-    resourceService.queryPage({ description: values.description, name: values.name }).then((res: any) => {
+    resourceService.queryPage({ id: values.id, userName: values.userName }).then((res: any) => {
       setData(res.data.list)
     })
 
   };
-  //添加用户
-  const onAddFinish: FormProps<FieldType>["onFinish"] = async (values: FieldType) => {
+  //添加权限
+  const onAddFinish: FormProps<UserRoleField>["onFinish"] = async (values: UserRoleField) => {
 
-    if (values.description === undefined && values.name === undefined) {
+    if (values.userId === undefined && values.userId === undefined) {
       messageApi.open({
         type: 'warning',
         content: "请输入信息.."
       })
       return;
     }
-    const { message } = await resourceService.save(values)
+    const { message, code, data } = await resourceService.saveUserRole(values);
+    handleCancel();
+    if (code === "403") {
+      messageApi.open({
+        type: "warning",
+        content: data
+      })
+      return;
+    }
     messageApi.open({
       type: "success",
       content: message
     })
-    handleCancel();
+    init();
+    
   };
   const [form] = Form.useForm();
 
@@ -130,14 +168,15 @@ const Resources: React.FC = () => {
     setEditingKey(record.id);
   };
   const update = async (id: any) => {
-    if (window.confirm("您确定要删除这条记录吗？")) {
+    if (window.confirm("您确定要解除这个用户的权限吗？")) {
       let newData = data.filter((v) => v.id != id)
       setData(newData);
-      let { message } = await resourceService.remove({}, id)
+      let { message } = await resourceService.removeUserRole({}, id)
       messageApi.open({
         type: "success",
         content: message
-      })
+      });
+      init();
     } else {
       // 用户点击了取消按钮，不执行删除操作
     }
@@ -179,26 +218,70 @@ const Resources: React.FC = () => {
       console.log('Validate Failed:', errInfo);
     }
   };
-
   const columns = [
     {
-      title: 'id',
+      title: 'ID',
       dataIndex: 'id',
-
-      editable: false,
-    },
-    {
-      title: '角色名',
-      dataIndex: 'name',
-
+      key: 'id',
       editable: true,
     },
     {
-      title: '描述',
-      dataIndex: 'description',
+      title: '用户名',
+      dataIndex: 'username',
+      key: 'username',
       editable: true,
     },
+    {
+      title: '角色',
+      dataIndex: 'role',
+      key: 'role',
+      editable: true,
+      render: (roles: Array<role>) => (
+        <>
+          {roles.map((role) => (
+            <div key={role.id} className='columnsStyle'>
+              <span>ID: {role.id}</span>
+              <span>角色名: {role.name}</span>
+              <span>描述: {role.description}</span>
+            </div>
+          ))}
+        </>
+      ),
+    },
+    {
+      title: '路由',
+      dataIndex: 'routes',
+      key: 'routes',
+      editable: true,
+      render: (routes: Array<route>) => (
+        <>
+          {routes.map((route) => (
+            <div key={route.id} className='columnsStyle'>
+              <span>描述: {route.description}</span>
+              <span>路径: {route.path}</span>
+            </div>
+          ))}
+        </>
+      ),
+    },
+    {
+      title: '资源',
+      dataIndex: 'resources',
+      key: 'resources',
+      editable: true,
+      render: (resources: Array<resources>) => (
+        <>
+          {resources.map((resource) => (
+            <div key={resource.id} className='columnsStyle'>
+              <span>描述: {resource.description}</span>
+              <span>API: {resource.urls}</span>
+            </div>
+          ))}
+        </>
+      ),
+    },
 
+    // 其他列配置根据需要添加
     {
       title: '操作',
       dataIndex: '操作',
@@ -219,11 +302,11 @@ const Resources: React.FC = () => {
         } else {
           return (
             <div>
-              <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
+              {/* <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
                 <Button size="small" type="primary"> 编辑</Button>
-              </Typography.Link>
-              <span className='marginLeft' onClick={() => update(record.id)}>
-                <Button size="small" type="primary" danger > 删除</Button>
+              </Typography.Link> */}
+              <span className='marginLeft' onClick={() => update(record.userRoleId[0])}>
+                <Button size="small" type="primary" danger > 解除权限</Button>
               </span>
             </div>
           )
@@ -231,6 +314,61 @@ const Resources: React.FC = () => {
       },
     },
   ];
+  // const columns = [
+  //   {
+  //     title: 'id',
+  //     dataIndex: 'id',
+  //     editable: false,
+  //   },
+  //   {
+  //     title: '用户名',
+  //     dataIndex: 'username',
+  //     editable: true,
+  //   },
+  //   {
+  //     title: '角色描述',
+  //     dataIndex: 'role_description',
+  //     editable: true,
+  //     render: (text:any, record:Item) => (
+  //       record.role.map(i=>{
+  //         <span>i.description</span>
+  //       })
+
+  //     ),
+  //   },
+
+  //   {
+  //     title: '操作',
+  //     dataIndex: '操作',
+  //     render: (_: any, record: Item) => {
+  //       const editable = isEditing(record);
+  //       if (editable) {
+  //         return (
+  //           <span>
+  //             <Typography.Link onClick={() => save(record.id)} style={{ marginRight: 8 }}>
+  //               保存
+  //             </Typography.Link>
+  //             <Popconfirm title="确定取消?" okText="确定"
+  //               cancelText="取消" onConfirm={cancel}>
+  //               <a>取消</a>
+  //             </Popconfirm>
+  //           </span>
+  //         );
+  //       } else {
+  //         return (
+  //           <div>
+  //             <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
+  //               <Button size="small" type="primary"> 编辑</Button>
+  //             </Typography.Link>
+  //             <span className='marginLeft' onClick={() => update(record.id)}>
+  //               <Button size="small" type="primary" danger > 删除</Button>
+  //             </span>
+  //           </div>
+  //         )
+  //       }
+  //     },
+  //   },
+  // ];
 
   const mergedColumns: TableProps['columns'] = columns.map((col) => {
     if (!col.editable) {
@@ -253,7 +391,7 @@ const Resources: React.FC = () => {
 
       <Modal
         open={open}
-        title="添加用户信息"
+        title="添加权限"
         onCancel={handleCancel}
         footer
       >
@@ -261,10 +399,10 @@ const Resources: React.FC = () => {
           onFinish={onAddFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off" name="horizontal_login">
-          <Form.Item<FieldType> name="name" label="角色名" >
+          <Form.Item<UserRoleField> name="roleId" label="角色ID" >
             <Input></Input>
           </Form.Item>
-          <Form.Item<FieldType> name="description" label="描述" >
+          <Form.Item<UserRoleField> name="userId" label="用户ID" >
             <Input></Input>
           </Form.Item>
 
@@ -278,12 +416,13 @@ const Resources: React.FC = () => {
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
         autoComplete="off" layout="inline" name="horizontal_login">
-        <Form.Item<FieldType> name="name" label="角色名" >
+        <Form.Item<FieldType> name="id" label="ID" >
           <Input></Input>
         </Form.Item>
-        <Form.Item<FieldType> name="description" label="描述" >
+        <Form.Item<FieldType> name="userName" label="用户名" >
           <Input></Input>
         </Form.Item>
+
         <Tooltip title="search">
           <Button type="primary" icon={<SearchOutlined />} htmlType="submit" >
             搜索
@@ -291,7 +430,7 @@ const Resources: React.FC = () => {
         </Tooltip>
         <Button className="marginLeft" type="primary">重置</Button>
         <Button className="marginLeft" type="primary" onClick={showModal}>
-          添加
+          添加权限
         </Button>
       </Form>
 
@@ -310,7 +449,9 @@ const Resources: React.FC = () => {
           pagination={{
             onChange: cancel,
           }}
-        />
+        >
+
+        </Table>
       </Form>
     </div>
   );

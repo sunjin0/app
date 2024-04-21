@@ -23,3 +23,10 @@
 .marginBottom{
   margin-bottom: 2%;
 }
+.columnsStyle{
+  display: flex;
+  flex-direction: column;
+}
+.columnsStyle span{
+  padding: 3px;
+}
