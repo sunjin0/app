@@ -14,7 +14,8 @@ type FieldType = {
 };
 type UserRoleField = {
   userId: string,
-  roleId: string
+  roleId: string,
+  roleIds: Array<string>
 }
 
 const onFinishFailed: FormProps<any>["onFinishFailed"] = (errorInfo: any) => {
@@ -99,20 +100,22 @@ const Resources: React.FC = () => {
   const init = async () => {
     const res = await resourceService.queryPage({});
     setData(res.data.list);
+    setTotal(res.data.total)
   }
   const handleCancel = () => {
     setOpen(false);
   };
   //加载角色信息
   const options: SelectProps['options'] = [];
-  const handleChange = (value: Array<string>) => {
-    console.log(value);
-  };
+
   const [roles, setRoles] = useState(options);
   const rolesInit = async () => {
     const res = await roleService.queryPage({ size: 998 });
-   const role= res.data.list.map((el: any) => ({ label: el.description, value: el.id }))
-    setRoles(role)
+    if (res.code=="200") {
+      const role = res.data.list.map((el: any) => ({ label: el.description, value: el.id }))
+      setRoles(role)
+    }
+
   }
   // 表格代码
   const [data, setData] = useState(originData);
@@ -128,27 +131,36 @@ const Resources: React.FC = () => {
     const res = await resourceService.queryPage({ id: values.id, userName: values.userName });
     setData(res.data.list);
   };
+  const [total, setTotal] = useState(0);
+  const pageChange = async (page: number, size: number) => {
+    const { data } = await resourceService.queryPage({ current: page, size: size })
+    setData(data.list)
+  }
   //添加
+  const [roleIds, setRoleIds] = useState(Array<string>)
+  const handleChange = (value: Array<string>) => {
+    setRoleIds(value);
+  };
   const onAddFinish: FormProps<UserRoleField>["onFinish"] = async (values: UserRoleField) => {
 
-    if (values.userId === undefined && values.userId === undefined) {
+    if (values.userId === undefined && roleIds === undefined) {
       messageApi.open({
         type: 'warning',
         content: "请输入信息.."
       })
       return;
     }
-    const res = await resourceService.saveUserRole(values);
+    const res = await resourceService.saveUserRole({ userId: values.userId, roleIds: roleIds });
     handleCancel();
     noAuthMessage(res, messageApi);
     init();
   };
   //删除
-  const update = async (id:any,role: role[]) => {
+  const update = async (id: any, role: role[]) => {
     if (window.confirm("您确定要解除这个用户的权限吗？")) {
       let newData = data.filter((v) => v.id != id)
       setData(newData);
-      const res = await resourceService.removeUserRole({userId:id,roleIds:role.map(r=>r.id)})
+      const res = await resourceService.removeUserRole({ userId: id, roleIds: role.map(r => r.id) })
       noAuthMessage(res, messageApi);
       init();
     } else {
@@ -293,7 +305,7 @@ const Resources: React.FC = () => {
                 <Button size="small" type="primary"> 编辑</Button>
               </Typography.Link> */}
 
-                <span className='marginLeft' onClick={() => update(record.id,record.role)}>
+                <span className='marginLeft' onClick={() => update(record.id, record.role)}>
                   <Button size="small" type="primary" danger > 解除权限</Button>
                 </span>
               </div>
@@ -386,7 +398,9 @@ const Resources: React.FC = () => {
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
-            onChange: cancel,
+            onChange: pageChange,
+            total: total,
+            pageSize: 7
           }}
         >
         </Table>

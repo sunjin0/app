@@ -10,20 +10,12 @@ type FieldType = {
   id?: string;
   password: string;
 };
-
-const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo: any) => {
-  console.log('Failed:', errorInfo);
-};
-
 interface Item {
   id: string;
   userName: string;
   enable: number;
   locked: number;
 }
-
-const originData: any[] = [];
-
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   editing: boolean;
   dataIndex: string;
@@ -33,6 +25,15 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   index: number;
   children: React.ReactNode;
 }
+const originData: any[] = [];
+
+
+const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo: any) => {
+  console.log('Failed:', errorInfo);
+};
+
+
+
 
 const EditableCell: React.FC<EditableCellProps> = ({
   editing,
@@ -80,9 +81,11 @@ const User: React.FC = () => {
 
   // 表格代码
   const [data, setData] = useState(originData);
+ 
   const init = async () => {
     const res = await userService.queryPage({});
     setData(res.data.list)
+    setTotal(res.data.total)
   }
   const cancel = () => {
     setEditingKey('');
@@ -103,6 +106,12 @@ const User: React.FC = () => {
     })
 
   };
+  //分页查询
+  const [total,setTotal]=useState(0);
+  const pageChange = async (page: number, size: number) => {
+    const { data } = await userService.queryPage({ current: page, size: size })
+    setData(data.list)
+  }
   //添加用户
   const onAddFinish: FormProps<FieldType>["onFinish"] = async (values: FieldType) => {
 
@@ -134,18 +143,15 @@ const User: React.FC = () => {
       let newData = data.filter((v) => v.id != id)
       setData(newData);
       let res = await userService.remove({}, id)
-     
+
       init();
       noAuthMessage(res, messageApi);
     } else {
       // 用户点击了取消按钮，不执行删除操作
     }
-
-
-
   }
 
-//修改
+  //修改
   const save = async (key: React.Key) => {
     try {
       const row = (await form.validateFields()) as Item;
@@ -307,7 +313,9 @@ const User: React.FC = () => {
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
-            onChange: cancel,
+            onChange: pageChange,
+            total: total,
+            pageSize:7
           }}
         />
       </Form>

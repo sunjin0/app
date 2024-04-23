@@ -4,7 +4,7 @@ import "../view/view.css"
 import { generateImageVerificationCode } from "../utils/util"
 import { login } from "../service/login/index"
 import { useHistory } from "react-router-dom"
-import { log } from 'console';
+
 type FieldType = {
   userName?: string;
   password?: string;
@@ -51,7 +51,7 @@ const Login: React.FC = () => {
         })
       return;
     }
-    login(values).then((res:any) => {
+    login(values).then((res: any) => {
       console.log(res);
 
       if (res.code === "200") {
@@ -61,7 +61,7 @@ const Login: React.FC = () => {
             content: "登陆成功",
           })
         history.push("/dashboard");
-        localStorage.setItem("path",JSON.stringify(res.data.path))
+        localStorage.setItem("path", JSON.stringify(res.data.path))
       } else {
         messageApi.open(
           {

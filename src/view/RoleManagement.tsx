@@ -86,11 +86,13 @@ const Role: React.FC = () => {
   //获取路由信息
   const routeInit = async () => {
     const res = await roleService.queryRoute({});
-    const list = res.data.list.map((el: any) => ({
-      label: el.description,
-      value: el.id,
-    }));
-    setRoutes(list);
+    if (res.code === "200") {
+      const list = res.data.list.map((el: any) => ({
+        label: el.description,
+        value: el.id,
+      }));
+      setRoutes(list);
+    }
   }
 
   // model
@@ -108,6 +110,7 @@ const Role: React.FC = () => {
   const init = async () => {
     const res = await roleService.queryPage({});
     setData(res.data.list);
+    setTotal(res.data.total)
   }
 
   const cancel = () => {
@@ -151,6 +154,11 @@ const Role: React.FC = () => {
     form.setFieldsValue({ name: '', enable: '', locked: '', ...record });
     setEditingKey(record.id);
   };
+  const [total, setTotal] = useState(0);
+  const pageChange = async (page: number, size: number) => {
+    const { data } = await roleService.queryPage({ current: page, size: size })
+    setData(data.list)
+  }
   //删除
   const update = async (id: any) => {
     if (window.confirm("您确定要删除这条记录吗？")) {
@@ -329,7 +337,9 @@ const Role: React.FC = () => {
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
-            onChange: cancel,
+            onChange: pageChange,
+            total: total,
+            pageSize: 7
           }}
         />
       </Form>

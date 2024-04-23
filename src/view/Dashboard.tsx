@@ -5,10 +5,11 @@ import {
   HomeFilled
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme } from 'antd';
-import { Link, Route, BrowserRouter as Router, useHistory } from 'react-router-dom';
+import { Link, Route, BrowserRouter as Router, useHistory, Redirect } from 'react-router-dom';
 import Resources from './ResourcesManagement';
 import Role from './RoleManagement';
 import User from './UserManagement';
+import Home from './Home';
 
 const { Header, Sider, Content } = Layout;
 
@@ -47,7 +48,7 @@ const Dashboard: React.FC = () => {
             mode="inline"
             defaultSelectedKeys={['9']}
           >
-            <Menu.Item key="9"><Link to="/"><HomeFilled /><span>首页</span></Link></Menu.Item>
+            <Menu.Item key="9"><Link to="/home"><HomeFilled /><span>首页</span></Link></Menu.Item>
             {
               paths.map((item: any, index) => (
                 // 注意：map 方法中需要提供一个唯一的 key 属性
@@ -79,9 +80,11 @@ const Dashboard: React.FC = () => {
               borderRadius: borderRadiusLG,
             }}
           >
+            <Route path="/home" render={() => (<Home />)} />
             <Route path="/user/management" render={() => (<User />)} />
             <Route path="/role/management" render={() => (<Role />)} />
             <Route path="/resources/management" render={() => (<Resources />)} />
+            <Redirect to="/home"/>
           </Content>
 
         </Layout>

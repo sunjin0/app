@@ -10,6 +10,7 @@ const User = React.lazy(() => import('../view/UserManagement'))
 const Role = React.lazy(() => import('../view/RoleManagement'))
 const Resources = React.lazy(() => import('../view/ResourcesManagement'))
 const RoleResources = React.lazy(() => import('../view/RouteManagement'))
+const Home = React.lazy(() => import('../view/Home'))
 const routes: RouteConfig = [
   {
     path: '/',
@@ -18,43 +19,53 @@ const routes: RouteConfig = [
   },
   {
     path: '/dashboard',
-    exact: true,
+    exact: false,
     component: Dashboard,
-    children: [ {
+    children: [
+      {
+        name: "首页",
+        path: '/home',
+        exact: false,
+        component: Home,
+    
+      },
+      {
       name: "用户管理",
       path: '/user/management',
-      exact: true,
+      exact: false,
       component: User,
-  
+    
     },
     {
       name: "角色管理",
       path: '/role/management',
-      exact: true,
+      exact: false,
       component: Role,
-  
+    
     },
     {
       name: '权限管理',
       path: '/resources/management',
-      exact: true,
+      exact: false,
       component: Resources,
-  
+    
     },
     {
       name: '权限分配',
       path: '/role_route/management',
-      exact: true,
+      exact: false,
       component: RoleResources,
-  
-    },]
+    
+    },
+     ]
   },
- 
+  
+
 
   // {
   //   name: '404',
   //   path: '*',
-  //   exact: true,
+  //   exact: false,
   //   component: ()=>{return<h1>404 找不到页面....</h1>},
   // }
 

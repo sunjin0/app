@@ -1,5 +1,7 @@
 .Login{
   margin: 15% 30%;
+  padding: 20px;
+  background-color: #f5f5f5;
 }
 .code{
   display: flex;
