@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Button, FormProps, message, Modal, Select, Space, TableProps, Tooltip } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Button, FormProps, message, Modal, Select, SelectProps, Space, TableProps, Tooltip } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import resourceService from "../service/resources"
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
-import { resources, role, route } from '../component';
+import { noAuthMessage, resources, role, route } from '../common';
+import roleService from '../service/role';
 
 //字段
 type FieldType = {
@@ -77,41 +78,57 @@ const EditableCell: React.FC<EditableCellProps> = ({
 };
 
 const Resources: React.FC = () => {
+  const [messageApi, contextHolder] = message.useMessage();
+  let renderRef = useRef<boolean>(true);
+  //初始化数据
+  useEffect(() => {
+    if (renderRef.current) {
+      renderRef.current = false;
+      return;
+    }
+    init();
+    rolesInit();
+  }, []);
+
   // model
   const [open, setOpen] = useState(false);
-
   const showModal = () => {
     setOpen(true);
   };
-
-  const init = () => {
-    resourceService.queryPage({}).then((res: any) => {
-      setData(res.data.list)
-    })
+  //初始化
+  const init = async () => {
+    const res = await resourceService.queryPage({});
+    setData(res.data.list);
   }
   const handleCancel = () => {
     setOpen(false);
   };
-
+  //加载角色信息
+  const options: SelectProps['options'] = [];
+  const handleChange = (value: Array<string>) => {
+    console.log(value);
+  };
+  const [roles, setRoles] = useState(options);
+  const rolesInit = async () => {
+    const res = await roleService.queryPage({ size: 998 });
+   const role= res.data.list.map((el: any) => ({ label: el.description, value: el.id }))
+    setRoles(role)
+  }
   // 表格代码
   const [data, setData] = useState(originData);
-  //初始化数据
-  useEffect(() => {
-    init()
-  }, []);
+
+
   //查询
-  const onFinish: FormProps<FieldType>["onFinish"] = (values: FieldType) => {
+  const onFinish: FormProps<FieldType>["onFinish"] = async (values: FieldType) => {
     console.log('Failed:', values);
     if (values.id === undefined && values.userName === undefined) {
       init()
       return;
     }
-    resourceService.queryPage({ id: values.id, userName: values.userName }).then((res: any) => {
-      setData(res.data.list)
-    })
-
+    const res = await resourceService.queryPage({ id: values.id, userName: values.userName });
+    setData(res.data.list);
   };
-  //添加权限
+  //添加
   const onAddFinish: FormProps<UserRoleField>["onFinish"] = async (values: UserRoleField) => {
 
     if (values.userId === undefined && values.userId === undefined) {
@@ -121,22 +138,23 @@ const Resources: React.FC = () => {
       })
       return;
     }
-    const { message, code, data } = await resourceService.saveUserRole(values);
+    const res = await resourceService.saveUserRole(values);
     handleCancel();
-    if (code === "403") {
-      messageApi.open({
-        type: "warning",
-        content: data
-      })
-      return;
-    }
-    messageApi.open({
-      type: "success",
-      content: message
-    })
+    noAuthMessage(res, messageApi);
     init();
-    
   };
+  //删除
+  const update = async (id:any,role: role[]) => {
+    if (window.confirm("您确定要解除这个用户的权限吗？")) {
+      let newData = data.filter((v) => v.id != id)
+      setData(newData);
+      const res = await resourceService.removeUserRole({userId:id,roleIds:role.map(r=>r.id)})
+      noAuthMessage(res, messageApi);
+      init();
+    } else {
+      // 用户点击了取消按钮，不执行删除操作
+    }
+  }
   const [form] = Form.useForm();
 
   const [editingKey, setEditingKey] = useState('');
@@ -146,28 +164,11 @@ const Resources: React.FC = () => {
     form.setFieldsValue({ name: '', enable: '', locked: '', ...record });
     setEditingKey(record.id);
   };
-  const update = async (id: any) => {
-    if (window.confirm("您确定要解除这个用户的权限吗？")) {
-      let newData = data.filter((v) => v.id != id)
-      setData(newData);
-      let { message } = await resourceService.removeUserRole({}, id)
-      messageApi.open({
-        type: "success",
-        content: message
-      });
-      init();
-    } else {
-      // 用户点击了取消按钮，不执行删除操作
-    }
 
-
-
-  }
   const cancel = () => {
     setEditingKey('');
   };
-  const [messageApi, contextHolder] = message.useMessage();
-
+  // 修改
   const save = async (key: React.Key) => {
     try {
       const row = (await form.validateFields()) as Item;
@@ -279,76 +280,29 @@ const Resources: React.FC = () => {
             </span>
           );
         } else {
-          return (
-            <div>
-              {/* <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
+
+          if (record.username === "root") {
+            return
+          } else if (record.role.length === 0) {
+            return
+          }
+          else {
+            return (
+              <div>
+                {/* <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
                 <Button size="small" type="primary"> 编辑</Button>
               </Typography.Link> */}
-              <span className='marginLeft' onClick={() => update(record.userRoleId[0])}>
-                <Button size="small" type="primary" danger > 解除权限</Button>
-              </span>
-            </div>
-          )
+
+                <span className='marginLeft' onClick={() => update(record.id,record.role)}>
+                  <Button size="small" type="primary" danger > 解除权限</Button>
+                </span>
+              </div>
+            )
+          }
         }
       },
     },
   ];
-  // const columns = [
-  //   {
-  //     title: 'id',
-  //     dataIndex: 'id',
-  //     editable: false,
-  //   },
-  //   {
-  //     title: '用户名',
-  //     dataIndex: 'username',
-  //     editable: true,
-  //   },
-  //   {
-  //     title: '角色描述',
-  //     dataIndex: 'role_description',
-  //     editable: true,
-  //     render: (text:any, record:Item) => (
-  //       record.role.map(i=>{
-  //         <span>i.description</span>
-  //       })
-
-  //     ),
-  //   },
-
-  //   {
-  //     title: '操作',
-  //     dataIndex: '操作',
-  //     render: (_: any, record: Item) => {
-  //       const editable = isEditing(record);
-  //       if (editable) {
-  //         return (
-  //           <span>
-  //             <Typography.Link onClick={() => save(record.id)} style={{ marginRight: 8 }}>
-  //               保存
-  //             </Typography.Link>
-  //             <Popconfirm title="确定取消?" okText="确定"
-  //               cancelText="取消" onConfirm={cancel}>
-  //               <a>取消</a>
-  //             </Popconfirm>
-  //           </span>
-  //         );
-  //       } else {
-  //         return (
-  //           <div>
-  //             <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
-  //               <Button size="small" type="primary"> 编辑</Button>
-  //             </Typography.Link>
-  //             <span className='marginLeft' onClick={() => update(record.id)}>
-  //               <Button size="small" type="primary" danger > 删除</Button>
-  //             </span>
-  //           </div>
-  //         )
-  //       }
-  //     },
-  //   },
-  // ];
-
   const mergedColumns: TableProps['columns'] = columns.map((col) => {
     if (!col.editable) {
       return col;
@@ -365,6 +319,7 @@ const Resources: React.FC = () => {
     };
   });
 
+
   return (
     <div>
 
@@ -378,13 +333,18 @@ const Resources: React.FC = () => {
           onFinish={onAddFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off" name="horizontal_login">
-          <Form.Item<UserRoleField> name="roleId" label="角色ID" >
-            <Input></Input>
-          </Form.Item>
           <Form.Item<UserRoleField> name="userId" label="用户ID" >
-            <Input></Input>
+            <Input ></Input>
           </Form.Item>
-
+          <Form.Item<UserRoleField> name="roleId" label="角色" >
+            <Select
+              mode="tags"
+              style={{ width: '100%' }}
+              placeholder="请选择角色"
+              onChange={handleChange}
+              options={roles}
+            />
+          </Form.Item>
           <Button type="primary" htmlType="submit" >
             提交
           </Button>
@@ -429,7 +389,6 @@ const Resources: React.FC = () => {
             onChange: cancel,
           }}
         >
-
         </Table>
       </Form>
     </div>

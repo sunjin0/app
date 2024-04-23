@@ -1,4 +1,4 @@
-import { result } from '../../component'
+import { result } from '../../common'
 import instance from '../../utils/request'
 const userService = {
   queryPage(params: any): Promise<result> {

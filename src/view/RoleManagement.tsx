@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Button, FormProps, message, Modal, Select, Space, TableProps, Tooltip } from 'antd';
+import { Button, FormProps, message, Modal, Select, SelectProps, Space, TableProps, Tooltip } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import roleService from "../service/role"
+
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
-import { log } from 'console';
+import { noAuthMessage } from '../common';
+const options: SelectProps['options'] = [];
+
+const handleChange = (value: string[]) => {
+  console.log(value);
+};
 //字段
 type FieldType = {
   id: string;
   name?: string;
   description: string;
+  routeId: string
 };
 
 const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo: any) => {
@@ -69,57 +76,70 @@ const EditableCell: React.FC<EditableCellProps> = ({
 };
 
 const Role: React.FC = () => {
+  //路由信息
+  const [routes, setRoutes] = useState(options)
+  //初始化数据
+  useEffect(() => {
+    init();
+    routeInit();
+  }, []);
+  //获取路由信息
+  const routeInit = async () => {
+    const res = await roleService.queryRoute({});
+    const list = res.data.list.map((el: any) => ({
+      label: el.description,
+      value: el.id,
+    }));
+    setRoutes(list);
+  }
+
   // model
   const [open, setOpen] = useState(false);
-
   const showModal = () => {
     setOpen(true);
   };
-
-
   const handleCancel = () => {
     setOpen(false);
   };
 
   // 表格代码
   const [data, setData] = useState(originData);
-  //初始化数据
-  useEffect(() => {
-    init()
-  }, []);
-  const init = () => {
-    roleService.queryPage({}).then((res: any) => {
-      setData(res.data.list)
-    })
+
+  const init = async () => {
+    const res = await roleService.queryPage({});
+    setData(res.data.list);
   }
+
+  const cancel = () => {
+    setEditingKey('');
+  };
+  const [messageApi, contextHolder] = message.useMessage();
+
   //查询
-  const onFinish: FormProps<FieldType>["onFinish"] = (values: FieldType) => {
+  const onFinish: FormProps<FieldType>["onFinish"] = async (values: FieldType) => {
     console.log('Failed:', values);
     if (values.description === undefined && values.name === undefined) {
       init();
       return;
     }
-    roleService.queryPage({ description: values.description, name: values.name }).then((res: any) => {
-      setData(res.data.list)
-    })
+    const res = await roleService.queryPage({ description: values.description, name: values.name })
+    setData(res.data.list)
+
 
   };
   //添加用户
   const onAddFinish: FormProps<FieldType>["onFinish"] = async (values: FieldType) => {
 
-    if (values.description === undefined && values.name === undefined) {
+    if (values.description === undefined && values.name === undefined && values.routeId === undefined) {
       messageApi.open({
         type: 'warning',
         content: "请输入信息.."
       })
       return;
     }
-    const { message } = await roleService.save(values);
+    const res = await roleService.save(values);
     handleCancel();
-    messageApi.open({
-      type: "success",
-      content: message
-    })
+    noAuthMessage(res, messageApi);
     init();
   };
   const [form] = Form.useForm();
@@ -131,28 +151,18 @@ const Role: React.FC = () => {
     form.setFieldsValue({ name: '', enable: '', locked: '', ...record });
     setEditingKey(record.id);
   };
+  //删除
   const update = async (id: any) => {
     if (window.confirm("您确定要删除这条记录吗？")) {
       let newData = data.filter((v) => v.id != id)
       setData(newData);
-      let { message } = await roleService.remove({}, id)
-      messageApi.open({
-        type: "success",
-        content: message
-      });
+      const res = await roleService.remove({}, id)
+      noAuthMessage(res, messageApi);
       init();
-    } else {
-      // 用户点击了取消按钮，不执行删除操作
     }
-
-
-
   }
-  const cancel = () => {
-    setEditingKey('');
-  };
-  const [messageApi, contextHolder] = message.useMessage();
 
+  //修改
   const save = async (key: React.Key) => {
     try {
       const row = (await form.validateFields()) as Item;
@@ -168,11 +178,8 @@ const Role: React.FC = () => {
         });
         setData(newData);
         setEditingKey('');
-        let { message } = await roleService.update(row)
-        messageApi.open({
-          type: "success",
-          content: message
-        })
+        const res = await roleService.update(row)
+        noAuthMessage(res, messageApi);
       } else {
         newData.push(row);
         setData(newData);
@@ -182,7 +189,7 @@ const Role: React.FC = () => {
       console.log('Validate Failed:', errInfo);
     }
   };
-
+  //表格列
   const columns = [
     {
       title: 'id',
@@ -253,10 +260,11 @@ const Role: React.FC = () => {
 
   return (
     <div>
-
+      {contextHolder}
+      {/* 添加 */}
       <Modal
         open={open}
-        title="添加用户信息"
+        title="添加角色信息"
         onCancel={handleCancel}
         footer
       >
@@ -264,19 +272,29 @@ const Role: React.FC = () => {
           onFinish={onAddFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off" name="horizontal_login">
-          <Form.Item<FieldType> name="name" label="角色名" >
+          <Form.Item<FieldType> name="name" label="角色姓名" >
             <Input></Input>
           </Form.Item>
-          <Form.Item<FieldType> name="description" label="描述" >
+          <Form.Item<FieldType> name="description" label="角色描述" >
             <Input></Input>
           </Form.Item>
-
+          <Form.Item<FieldType> name="routeId" label="路由权限" >
+            <Select
+              mode="multiple"
+              allowClear
+              style={{ width: '100%' }}
+              placeholder="Please select"
+              onChange={handleChange}
+              options={routes}
+            />
+          </Form.Item>
           <Button type="primary" htmlType="submit" >
             提交
           </Button>
 
         </Form>
       </Modal>
+      {/* 查询表单 */}
       <Form className="marginBottom" initialValues={{ remember: true }}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
@@ -297,9 +315,9 @@ const Role: React.FC = () => {
           添加
         </Button>
       </Form>
-
+      {/* 表格 */}
       <Form form={form} component={false}>
-        {contextHolder}
+
         <Table
           components={{
             body: {

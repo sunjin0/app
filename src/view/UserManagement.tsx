@@ -4,6 +4,7 @@ import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import userService from "../service/user"
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
+import { noAuthMessage } from '../common';
 type FieldType = {
   userName?: string;
   id?: string;
@@ -70,12 +71,9 @@ const EditableCell: React.FC<EditableCellProps> = ({
 const User: React.FC = () => {
   // model
   const [open, setOpen] = useState(false);
-
   const showModal = () => {
     setOpen(true);
   };
-
-
   const handleCancel = () => {
     setOpen(false);
   };
@@ -83,20 +81,17 @@ const User: React.FC = () => {
   // 表格代码
   const [data, setData] = useState(originData);
   const init = async () => {
-    const { data, code } = await userService.queryPage({});
-    if (code === "403") {
-      messageApi.open({
-        type: "warning",
-        content: data
-      })
-      return;
-    }
-    setData(data.list)
+    const res = await userService.queryPage({});
+    setData(res.data.list)
   }
+  const cancel = () => {
+    setEditingKey('');
+  };
+  const [messageApi, contextHolder] = message.useMessage();
   useEffect(() => {
-
     init();
   }, []);
+  //查询
   const onFinish: FormProps<FieldType>["onFinish"] = (values: FieldType) => {
     console.log('Failed:', values);
     if (values.id === undefined && values.userName === undefined) {
@@ -118,13 +113,10 @@ const User: React.FC = () => {
       })
       return;
     }
-    const { message } = await userService.save(values)
+    const res = await userService.save(values)
     handleCancel();
-    messageApi.open({
-      type: "success",
-      content: message
-    })
     init();
+    noAuthMessage(res, messageApi);
 
   };
   const [form] = Form.useForm();
@@ -136,16 +128,15 @@ const User: React.FC = () => {
     form.setFieldsValue({ userName: '', enable: '', locked: '', ...record });
     setEditingKey(record.id);
   };
+  //删除
   const update = async (id: any) => {
     if (window.confirm("您确定要删除这条记录吗？")) {
       let newData = data.filter((v) => v.id != id)
       setData(newData);
-      let { message } = await userService.remove({}, id)
-      messageApi.open({
-        type: "success",
-        content: message
-      });
+      let res = await userService.remove({}, id)
+     
       init();
+      noAuthMessage(res, messageApi);
     } else {
       // 用户点击了取消按钮，不执行删除操作
     }
@@ -153,11 +144,8 @@ const User: React.FC = () => {
 
 
   }
-  const cancel = () => {
-    setEditingKey('');
-  };
-  const [messageApi, contextHolder] = message.useMessage();
 
+//修改
   const save = async (key: React.Key) => {
     try {
       const row = (await form.validateFields()) as Item;
@@ -173,11 +161,8 @@ const User: React.FC = () => {
         });
         setData(newData);
         setEditingKey('');
-        let { message } = await userService.update(row)
-        messageApi.open({
-          type: "success",
-          content: message
-        })
+        const res = await userService.update(row)
+        noAuthMessage(res, messageApi);
       } else {
         newData.push(row);
         setData(newData);

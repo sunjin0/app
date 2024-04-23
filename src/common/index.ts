@@ -1,3 +1,5 @@
+import { MessageInstance } from "antd/es/message/interface";
+
 export  class result {
   code: string;
   message: string;
@@ -31,4 +33,18 @@ export type route = {
   parentId: string,
   path: string,
   size: string
+}
+export  const noAuthMessage=(res:result,messageApi:MessageInstance)=>{
+
+  if (res.code === "403") {
+    messageApi.open({
+      type: "warning",
+      content: res.data
+    })
+    return;
+  }
+  messageApi.open({
+    type: "success",
+    content: res.message
+  })
 }

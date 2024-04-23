@@ -22,7 +22,11 @@ const Dashboard: React.FC = () => {
     } else {
       history.push("/dashboard")
     }
-    setPaths(JSON.parse(localStorage.getItem("path") || ""));
+    const path = JSON.parse(localStorage.getItem("path") || "");
+    if (path !== undefined || path !== null) {
+      setPaths(path);
+    }
+
   }, [])
   const [collapsed, setCollapsed] = useState(false);
   const {
