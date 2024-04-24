@@ -5,6 +5,7 @@ import resourceService from "../service/resources"
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
 import { isAuth, resources, role, route } from '../common';
+import { log } from 'console';
 
 
 //字段
@@ -99,14 +100,17 @@ const Resources: React.FC = () => {
   const options: SelectProps['options'] = [];
 
   const [roles, setRoles] = useState(options);
+  const [users, setUsers] = useState(options)
   //初始化
   const init = async () => {
 
     const res = await resourceService.queryPage({});
     setData(res.data.list);
     setTotal(res.data.total)
-    const role = res.data.other.map((el: any) => ({ label: el.description, value: el.id }))
+    const role = res.data.other.roles.map((el: any) => ({ label: el.description, value: el.id }))
     setRoles(role)
+    const users = res.data.other.users.map((el: any) => ({ label: el.userName, value: el.id }))
+    setUsers(users)
   }
   const handleCancel = () => {
     setOpen(false);
@@ -134,19 +138,17 @@ const Resources: React.FC = () => {
   }
   //添加
   const [roleIds, setRoleIds] = useState(Array<string>)
-  const handleChange = (value: Array<string>) => {
-    setRoleIds(value);
-  };
+  const [userId, setUserId] = useState("")
   const onAddFinish: FormProps<UserRoleField>["onFinish"] = async (values: UserRoleField) => {
 
-    if (values.userId === undefined && roleIds === undefined) {
+    if (userId=== "" && roleIds === undefined) {
       messageApi.open({
         type: 'warning',
         content: "请输入信息.."
       })
       return;
     }
-    const res = await resourceService.saveUserRole({ userId: values.userId, roleIds: roleIds });
+    const res = await resourceService.saveUserRole({ userId: userId, roleIds: roleIds });
     handleCancel();
     if (isAuth(res, messageApi)) {
       init()
@@ -345,15 +347,24 @@ const Resources: React.FC = () => {
           onFinish={onAddFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off" name="horizontal_login">
-          <Form.Item<UserRoleField>  name="userId" label="用户ID" >
-            <Input placeholder='请输入用户ID'></Input>
+          <Form.Item<UserRoleField> name="userId" label="用户" >
+            <Select
+              style={{ width: '100%' }}
+              placeholder="请选择用户"
+              onChange={(value) => {
+                setUserId(value)
+              }}
+              options={users}
+            />
           </Form.Item>
-          <Form.Item<UserRoleField> name="roleId" label="角色ID" >
+          <Form.Item<UserRoleField> name="roleId" label="角色" >
             <Select
               mode="tags"
               style={{ width: '100%' }}
               placeholder="请选择角色"
-              onChange={handleChange}
+              onChange={(value: Array<string>) => {
+                setRoleIds(value);
+              }}
               options={roles}
             />
           </Form.Item>

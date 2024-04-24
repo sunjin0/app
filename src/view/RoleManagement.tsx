@@ -123,7 +123,7 @@ const Role: React.FC = () => {
     const res = await roleService.queryPage({});
     setData(res.data.list);
     setTotal(res.data.total);
-    const route = res.data.other.map((r: route) => ({
+    const route = res.data.other.routes.map((r: route) => ({
       title: r.description,
       value: r.id,
       key: r.id,
