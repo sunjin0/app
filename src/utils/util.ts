@@ -15,8 +15,6 @@ export  function generateImageVerificationCode(length: number): Promise<object> 
     context.textBaseline = 'middle';
     context.fillText(verificationCode, 50, 20);
     const url = canvas.toDataURL('image/png');
-    console.log(url);
-    
     resolve({code:verificationCode,url:url});
   });
 }

@@ -5,21 +5,11 @@ const roleService = {
   queryPage(params: any): Promise<result> {
     return new Promise((resolve, reject) => {
       instance.post('/v1/api/admin/role/query', params).then((res: any) => {
-        console.log(res);
-        
         resolve(new result(res.code, res.message, res.data))
       })
     })
   },
-  queryRoute(params: any): Promise<result> {
-    return new Promise((resolve, reject) => {
-      instance.post('/v1/api/admin/role/query/route', params).then((res: any) => {
-        console.log(res);
-        
-        resolve(new result(res.code, res.message, res.data))
-      })
-    })
-  },
+
   save(params: any): Promise<result> {
     return new Promise((resolve, reject) => {
       instance.post('/v1/api/admin/role/add', params).then((res: any) => {

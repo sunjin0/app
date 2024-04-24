@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, FormProps, message, Modal, Select, SelectProps, Space, TableProps, Tooltip } from 'antd';
+import { Button, FormProps, message, Modal, Select, SelectProps, Space, TableProps, Tooltip, TreeSelect } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import roleService from "../service/role"
 
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
-import { noAuthMessage } from '../common';
+import { ArrayToTree, isAuth, role, route } from '../common';
 const options: SelectProps['options'] = [];
 
 const handleChange = (value: string[]) => {
@@ -16,7 +16,7 @@ type FieldType = {
   id: string;
   name?: string;
   description: string;
-  routeId: string
+  routeIds: Array<string>
 };
 
 const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo: any) => {
@@ -74,26 +74,38 @@ const EditableCell: React.FC<EditableCellProps> = ({
     </td>
   );
 };
+const { SHOW_PARENT } = TreeSelect;
+
+
+
 
 const Role: React.FC = () => {
   //路由信息
-  const [routes, setRoutes] = useState(options)
+  const [routes, setRoutes] = useState(Array<string>);
+  const [treeData, setTreeData] = useState([])
+  const onChange = (newValue: string[]) => {
+    console.log('onChange ', newValue);
+    setRoutes(newValue);
+  };
+  const tProps = {
+    treeData,
+    routes,
+    onChange,
+    treeCheckable: true,
+    showCheckedStrategy: SHOW_PARENT,
+    placeholder: 'Please select',
+    style: {
+      width: '100%',
+    },
+  };
+
+
   //初始化数据
   useEffect(() => {
     init();
-    routeInit();
+
   }, []);
-  //获取路由信息
-  const routeInit = async () => {
-    const res = await roleService.queryRoute({});
-    if (res.code === "200") {
-      const list = res.data.list.map((el: any) => ({
-        label: el.description,
-        value: el.id,
-      }));
-      setRoutes(list);
-    }
-  }
+
 
   // model
   const [open, setOpen] = useState(false);
@@ -110,7 +122,15 @@ const Role: React.FC = () => {
   const init = async () => {
     const res = await roleService.queryPage({});
     setData(res.data.list);
-    setTotal(res.data.total)
+    setTotal(res.data.total);
+    const route = res.data.other.map((r: route) => ({
+      title: r.description,
+      value: r.id,
+      key: r.id,
+      parentId: r.parentId,
+      children: [],
+    }));
+    setTreeData(ArrayToTree(route));
   }
 
   const cancel = () => {
@@ -133,7 +153,7 @@ const Role: React.FC = () => {
   //添加用户
   const onAddFinish: FormProps<FieldType>["onFinish"] = async (values: FieldType) => {
 
-    if (values.description === undefined && values.name === undefined && values.routeId === undefined) {
+    if (values.description === undefined || values.name === undefined || values.routeIds === undefined) {
       messageApi.open({
         type: 'warning',
         content: "请输入信息.."
@@ -142,8 +162,9 @@ const Role: React.FC = () => {
     }
     const res = await roleService.save(values);
     handleCancel();
-    noAuthMessage(res, messageApi);
-    init();
+    if (isAuth(res, messageApi)) {
+      init()
+    }
   };
   const [form] = Form.useForm();
 
@@ -162,11 +183,14 @@ const Role: React.FC = () => {
   //删除
   const update = async (id: any) => {
     if (window.confirm("您确定要删除这条记录吗？")) {
-      let newData = data.filter((v) => v.id != id)
-      setData(newData);
+     
       const res = await roleService.remove({}, id)
-      noAuthMessage(res, messageApi);
-      init();
+      if(isAuth(res, messageApi)){
+        let newData = data.filter((v) => v.id != id)
+        setData(newData);
+        init();
+      }
+     
     }
   }
 
@@ -187,7 +211,7 @@ const Role: React.FC = () => {
         setData(newData);
         setEditingKey('');
         const res = await roleService.update(row)
-        noAuthMessage(res, messageApi);
+        isAuth(res, messageApi);
       } else {
         newData.push(row);
         setData(newData);
@@ -286,15 +310,8 @@ const Role: React.FC = () => {
           <Form.Item<FieldType> name="description" label="角色描述" >
             <Input></Input>
           </Form.Item>
-          <Form.Item<FieldType> name="routeId" label="路由权限" >
-            <Select
-              mode="multiple"
-              allowClear
-              style={{ width: '100%' }}
-              placeholder="Please select"
-              onChange={handleChange}
-              options={routes}
-            />
+          <Form.Item<FieldType> name="routeIds" label="路由权限" >
+            <TreeSelect {...tProps} />
           </Form.Item>
           <Button type="primary" htmlType="submit" >
             提交

@@ -4,7 +4,7 @@ import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import userService from "../service/user"
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
-import { noAuthMessage } from '../common';
+import { isAuth } from '../common';
 type FieldType = {
   userName?: string;
   id?: string;
@@ -81,7 +81,7 @@ const User: React.FC = () => {
 
   // 表格代码
   const [data, setData] = useState(originData);
- 
+
   const init = async () => {
     const res = await userService.queryPage({});
     setData(res.data.list)
@@ -107,7 +107,7 @@ const User: React.FC = () => {
 
   };
   //分页查询
-  const [total,setTotal]=useState(0);
+  const [total, setTotal] = useState(0);
   const pageChange = async (page: number, size: number) => {
     const { data } = await userService.queryPage({ current: page, size: size })
     setData(data.list)
@@ -124,9 +124,9 @@ const User: React.FC = () => {
     }
     const res = await userService.save(values)
     handleCancel();
-    init();
-    noAuthMessage(res, messageApi);
-
+    if (isAuth(res, messageApi)) {
+      init()
+    }
   };
   const [form] = Form.useForm();
 
@@ -140,12 +140,13 @@ const User: React.FC = () => {
   //删除
   const update = async (id: any) => {
     if (window.confirm("您确定要删除这条记录吗？")) {
-      let newData = data.filter((v) => v.id != id)
-      setData(newData);
-      let res = await userService.remove({}, id)
 
-      init();
-      noAuthMessage(res, messageApi);
+      let res = await userService.remove({}, id)
+      if (isAuth(res, messageApi)) {
+        let newData = data.filter((v) => v.id != id)
+        setData(newData);
+        init();
+      }
     } else {
       // 用户点击了取消按钮，不执行删除操作
     }
@@ -168,7 +169,7 @@ const User: React.FC = () => {
         setData(newData);
         setEditingKey('');
         const res = await userService.update(row)
-        noAuthMessage(res, messageApi);
+        isAuth(res, messageApi);
       } else {
         newData.push(row);
         setData(newData);
@@ -315,7 +316,7 @@ const User: React.FC = () => {
           pagination={{
             onChange: pageChange,
             total: total,
-            pageSize:7
+            pageSize: 7
           }}
         />
       </Form>

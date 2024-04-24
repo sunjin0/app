@@ -4,8 +4,8 @@ import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import resourceService from "../service/resources"
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
-import { noAuthMessage, resources, role, route } from '../common';
-import roleService from '../service/role';
+import { isAuth, resources, role, route } from '../common';
+
 
 //字段
 type FieldType = {
@@ -88,7 +88,6 @@ const Resources: React.FC = () => {
       return;
     }
     init();
-    rolesInit();
   }, []);
 
   // model
@@ -96,27 +95,24 @@ const Resources: React.FC = () => {
   const showModal = () => {
     setOpen(true);
   };
-  //初始化
-  const init = async () => {
-    const res = await resourceService.queryPage({});
-    setData(res.data.list);
-    setTotal(res.data.total)
-  }
-  const handleCancel = () => {
-    setOpen(false);
-  };
   //加载角色信息
   const options: SelectProps['options'] = [];
 
   const [roles, setRoles] = useState(options);
-  const rolesInit = async () => {
-    const res = await roleService.queryPage({ size: 998 });
-    if (res.code=="200") {
-      const role = res.data.list.map((el: any) => ({ label: el.description, value: el.id }))
-      setRoles(role)
-    }
+  //初始化
+  const init = async () => {
 
+    const res = await resourceService.queryPage({});
+    setData(res.data.list);
+    setTotal(res.data.total)
+    const role = res.data.other.map((el: any) => ({ label: el.description, value: el.id }))
+    setRoles(role)
   }
+  const handleCancel = () => {
+    setOpen(false);
+  };
+
+
   // 表格代码
   const [data, setData] = useState(originData);
 
@@ -152,17 +148,21 @@ const Resources: React.FC = () => {
     }
     const res = await resourceService.saveUserRole({ userId: values.userId, roleIds: roleIds });
     handleCancel();
-    noAuthMessage(res, messageApi);
-    init();
+    if (isAuth(res, messageApi)) {
+      init()
+    }
   };
   //删除
   const update = async (id: any, role: role[]) => {
     if (window.confirm("您确定要解除这个用户的权限吗？")) {
-      let newData = data.filter((v) => v.id != id)
-      setData(newData);
+
       const res = await resourceService.removeUserRole({ userId: id, roleIds: role.map(r => r.id) })
-      noAuthMessage(res, messageApi);
-      init();
+      if (isAuth(res, messageApi)) {
+        let newData = data.filter((v) => v.id != id)
+        setData(newData);
+        init();
+      }
+
     } else {
       // 用户点击了取消按钮，不执行删除操作
     }

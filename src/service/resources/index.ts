@@ -32,14 +32,14 @@ const resourceService = {
   },
   saveUserRole(params: any): Promise<result> {
     return new Promise((resolve, reject) => {
-      instance.post('/v1/api/user-role/add', params).then((res: any) => {
+      instance.post('/v1/api/resources/user-role/add', params).then((res: any) => {
         resolve(new result(res.code, res.message, res.data))
       })
     })
   },
   removeUserRole(params: any): Promise<result> {
     return new Promise((resolve, reject) => {
-      instance.post('/v1/api/user-role/delete', params).then((res: any) => {
+      instance.post('/v1/api/resources/user-role/delete', params).then((res: any) => {
         resolve(new result(res.code, res.message, res.data))
       })
     })
