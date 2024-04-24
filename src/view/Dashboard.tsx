@@ -4,7 +4,7 @@ import {
   MenuUnfoldOutlined,
   HomeFilled
 } from '@ant-design/icons';
-import { Layout, Menu, Button, theme } from 'antd';
+import { Layout, Menu, Button, theme, Flex, Space } from 'antd';
 import { Link, Route, BrowserRouter as Router, useHistory, Redirect } from 'react-router-dom';
 import Resources from './ResourcesManagement';
 import Role from './RoleManagement';
@@ -37,11 +37,12 @@ const Dashboard: React.FC = () => {
     localStorage.removeItem("token");
     history.push("/")
   }
+  const [layoutLeft,setLayoutLeft]=useState(true)
   return (
     <Router>
       <Layout>
 
-        <Sider trigger={null} collapsible collapsed={collapsed}>
+        <Sider trigger={null} style={{ position: 'fixed', left: 0, top: 0, bottom: 0 }} collapsible collapsed={collapsed}>
           <h1 className='log'>Demo</h1>
           <Menu
             theme="dark"
@@ -57,12 +58,13 @@ const Dashboard: React.FC = () => {
             }
           </Menu>
         </Sider>
-        <Layout>
+        <Layout style={{ marginLeft: layoutLeft?200:80 }}>
           <Header style={{ padding: 0, background: colorBgContainer }}>
-            <Button
+           <Space >
+           <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={() =>{ setCollapsed(!collapsed); setLayoutLeft(!layoutLeft)}}
               style={{
                 fontSize: '16px',
                 width: 64,
@@ -70,12 +72,14 @@ const Dashboard: React.FC = () => {
               }}
             />
             <Button onClick={exit}>退出</Button>
+           </Space>
           </Header>
           <Content
             style={{
               margin: '24px 16px',
               padding: 24,
               minHeight: 620,
+
               background: colorBgContainer,
               borderRadius: borderRadiusLG,
             }}
@@ -84,7 +88,7 @@ const Dashboard: React.FC = () => {
             <Route path="/user/management" render={() => (<User />)} />
             <Route path="/role/management" render={() => (<Role />)} />
             <Route path="/resources/management" render={() => (<Resources />)} />
-            <Redirect to="/home"/>
+            <Redirect to="/home" />
           </Content>
 
         </Layout>

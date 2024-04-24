@@ -306,7 +306,7 @@ const Resources: React.FC = () => {
               </Typography.Link> */}
 
                 <span className='marginLeft' onClick={() => update(record.id, record.role)}>
-                  <Button size="small" type="primary" danger > 解除权限</Button>
+                  <Button size="small" type="primary" danger > 解除</Button>
                 </span>
               </div>
             )
@@ -337,7 +337,7 @@ const Resources: React.FC = () => {
 
       <Modal
         open={open}
-        title="添加权限"
+        title="授权"
         onCancel={handleCancel}
         footer
       >
@@ -345,10 +345,10 @@ const Resources: React.FC = () => {
           onFinish={onAddFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off" name="horizontal_login">
-          <Form.Item<UserRoleField> name="userId" label="用户ID" >
-            <Input ></Input>
+          <Form.Item<UserRoleField>  name="userId" label="用户ID" >
+            <Input placeholder='请输入用户ID'></Input>
           </Form.Item>
-          <Form.Item<UserRoleField> name="roleId" label="角色" >
+          <Form.Item<UserRoleField> name="roleId" label="角色ID" >
             <Select
               mode="tags"
               style={{ width: '100%' }}
@@ -381,7 +381,7 @@ const Resources: React.FC = () => {
         </Tooltip>
         <Button className="marginLeft" type="primary">重置</Button>
         <Button className="marginLeft" type="primary" onClick={showModal}>
-          添加权限
+          授权
         </Button>
       </Form>
 

@@ -93,7 +93,7 @@ const Role: React.FC = () => {
     onChange,
     treeCheckable: true,
     showCheckedStrategy: SHOW_PARENT,
-    placeholder: 'Please select',
+    placeholder: '请选择角色权限',
     style: {
       width: '100%',
     },
@@ -296,7 +296,7 @@ const Role: React.FC = () => {
       {/* 添加 */}
       <Modal
         open={open}
-        title="添加角色信息"
+        title="添加角色权限信息"
         onCancel={handleCancel}
         footer
       >
@@ -310,7 +310,7 @@ const Role: React.FC = () => {
           <Form.Item<FieldType> name="description" label="角色描述" >
             <Input></Input>
           </Form.Item>
-          <Form.Item<FieldType> name="routeIds" label="路由权限" >
+          <Form.Item<FieldType> name="routeIds" label="角色权限" >
             <TreeSelect {...tProps} />
           </Form.Item>
           <Button type="primary" htmlType="submit" >

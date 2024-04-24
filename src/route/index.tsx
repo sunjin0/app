@@ -22,44 +22,45 @@ const routes: RouteConfig = [
     exact: false,
     component: Dashboard,
     children: [
-      {
-        name: "首页",
-        path: '/home',
-        exact: false,
-        component: Home,
-    
-      },
-      {
-      name: "用户管理",
-      path: '/user/management',
-      exact: false,
-      component: User,
-    
-    },
-    {
-      name: "角色管理",
-      path: '/role/management',
-      exact: false,
-      component: Role,
-    
-    },
-    {
-      name: '权限管理',
-      path: '/resources/management',
-      exact: false,
-      component: Resources,
-    
-    },
-    {
-      name: '权限分配',
-      path: '/role_route/management',
-      exact: false,
-      component: RoleResources,
-    
-    },
-     ]
+
+    ]
   },
-  
+  {
+    name: "首页",
+    path: '/home',
+    exact: false,
+    component: Home,
+
+  },
+  {
+    name: "用户管理",
+    path: '/user/management',
+    exact: false,
+    component: User,
+
+  },
+  {
+    name: "角色管理",
+    path: '/role/management',
+    exact: false,
+    component: Role,
+
+  },
+  {
+    name: '权限管理',
+    path: '/resources/management',
+    exact: false,
+    component: Resources,
+
+  },
+  {
+    name: '权限分配',
+    path: '/role_route/management',
+    exact: false,
+    component: RoleResources,
+
+  },
+
 
 
   // {
