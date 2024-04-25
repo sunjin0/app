@@ -88,6 +88,7 @@ const Dashboard: React.FC = () => {
             <Route path="/user/management" render={() => (<User />)} />
             <Route path="/role/management" render={() => (<Role />)} />
             <Route path="/resources/management" render={() => (<Resources />)} />
+            
             <Redirect to="/home" />
           </Content>
 

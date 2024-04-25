@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, FormProps, message, Modal, TableProps, Tooltip } from 'antd';
+import { Button, Flex, FormProps, message, Modal, TableProps, Tooltip } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import userService from "../service/user"
 import "./view.css"
@@ -9,6 +9,8 @@ type FieldType = {
   userName?: string;
   id?: string;
   password: string;
+  enable: string;
+  locked: string;
 };
 interface Item {
   id: string;
@@ -97,11 +99,11 @@ const User: React.FC = () => {
   //查询
   const onFinish: FormProps<FieldType>["onFinish"] = (values: FieldType) => {
     console.log('Failed:', values);
-    if (values.id === undefined && values.userName === undefined) {
+    if (values.id === undefined && values.userName === undefined && values.enable === undefined && values.locked === undefined) {
       init();
       return;
     }
-    userService.queryPage({ id: values.id, userName: values.userName }).then((res: any) => {
+    userService.queryPage({ id: values.id, userName: values.userName, enable: values.enable, locked: values.locked }).then((res: any) => {
       setData(res.data.list)
     })
 
@@ -256,7 +258,6 @@ const User: React.FC = () => {
 
   return (
     <div>
-
       <Modal
         open={open}
         title="添加用户信息"
@@ -280,26 +281,37 @@ const User: React.FC = () => {
 
         </Form>
       </Modal>
-      <Form className="marginBottom" initialValues={{ remember: true }}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        autoComplete="off" layout="inline" name="horizontal_login">
-        <Form.Item<FieldType> name="id" label="ID" >
-          <Input></Input>
-        </Form.Item>
-        <Form.Item<FieldType> name="userName" label="用户名" >
-          <Input></Input>
-        </Form.Item>
-        <Tooltip title="search">
-          <Button type="primary" icon={<SearchOutlined />} htmlType="submit" >
-            搜索
+      <Flex vertical>
+        <Form className="marginBottom" initialValues={{ remember: true }}
+          onFinish={onFinish}
+          onFinishFailed={onFinishFailed}
+          autoComplete="off" layout="inline" name="horizontal_login">
+          <Form.Item<FieldType> name="id" label="ID" >
+            <Input></Input>
+          </Form.Item>
+          <Form.Item<FieldType> name="userName" label="用户名" >
+            <Input></Input>
+          </Form.Item>
+          <Form.Item<FieldType> name="enable" label="启用" >
+            <Input></Input>
+          </Form.Item>
+          <Form.Item<FieldType> name="locked" label="锁定" >
+            <Input></Input>
+          </Form.Item>
+          <Tooltip title="search">
+            <Button type="primary" icon={<SearchOutlined />} htmlType="submit" >
+              搜索
+            </Button>
+          </Tooltip>
+
+        </Form>
+        <Flex justify={"flex-end"}>
+          <Button className="marginLeft" type="primary">重置</Button>
+          <Button className="marginLeft" type="primary" onClick={showModal}>
+            添加
           </Button>
-        </Tooltip>
-        <Button className="marginLeft" type="primary">重置</Button>
-        <Button className="marginLeft" type="primary" onClick={showModal}>
-          添加
-        </Button>
-      </Form>
+        </Flex>
+      </Flex>
 
       <Form form={form} component={false}>
         {contextHolder}
