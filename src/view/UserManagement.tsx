@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Flex, FormProps, message, Modal, Select, TableProps, Tooltip } from 'antd';
-import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
+import { Button, FormProps, message, Modal, Select, TableProps, Tooltip } from 'antd';
+import { Form, Input, Popconfirm, Table, Typography } from 'antd';
 import userService from "../service/user"
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
@@ -99,7 +99,7 @@ const User: React.FC = () => {
   const handleCancel = () => {
     setOpen(false);
   };
-  const [enable, setEnable] = useState(0)
+  const [enable, setEnable] = useState(1)
   const [locked, setLocked] = useState(0)
   // 表格代码
   const [data, setData] = useState(originData);
