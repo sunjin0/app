@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, FormProps, message, Modal, Select, SelectProps, Space, TableProps, Tooltip } from 'antd';
+import { Button, FormProps, message, Modal, Select, SelectProps, Space, TableProps, Tag, Tooltip } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import resourceService from "../service/resources"
 import "./view.css"
@@ -26,7 +26,7 @@ const onFinishFailed: FormProps<any>["onFinishFailed"] = (errorInfo: any) => {
 interface Item {
   routes: Array<route>,
   role: Array<role>,
-  resources: Array<resources>,
+  resources: Array<any>,
   id: string,
   username: string,
   userRoleId: Array<string>
@@ -105,6 +105,8 @@ const Resources: React.FC = () => {
   const init = async () => {
 
     const res = await resourceService.queryPage({});
+    console.log(res.data.list);
+
     setData(res.data.list);
     setTotal(res.data.total)
     const role = res.data.other.roles.map((el: any) => ({ label: el.description, value: el.id }))
@@ -141,7 +143,7 @@ const Resources: React.FC = () => {
   const [userId, setUserId] = useState("")
   const onAddFinish: FormProps<UserRoleField>["onFinish"] = async (values: UserRoleField) => {
 
-    if (userId=== "" && roleIds === undefined) {
+    if (userId === "" && roleIds === undefined) {
       messageApi.open({
         type: 'warning',
         content: "请输入信息.."
@@ -233,11 +235,9 @@ const Resources: React.FC = () => {
       render: (roles: Array<role>) => (
         <>
           {roles.map((role) => (
-            <div key={role.id} className='columnsStyle'>
-              <span>ID: {role.id}</span>
-              <span>角色名: {role.name}</span>
-              <span>描述: {role.description}</span>
-            </div>
+            <Space key={role.id} >
+              <Tag color="#2db7f5">{role.description}</Tag>
+            </Space>
           ))}
         </>
       ),
@@ -250,10 +250,10 @@ const Resources: React.FC = () => {
       render: (routes: Array<route>) => (
         <>
           {routes.map((route) => (
-            <div key={route.id} className='columnsStyle'>
-              <span>描述: {route.description}</span>
-              <span>路径: {route.path}</span>
-            </div>
+            <Space key={route.id} >
+              <Tag color="#2db7f5">{route.description}</Tag>
+            </Space>
+
           ))}
         </>
       ),
@@ -266,10 +266,9 @@ const Resources: React.FC = () => {
       render: (resources: Array<resources>) => (
         <>
           {resources.map((resource) => (
-            <div key={resource.id} className='columnsStyle'>
-              <span>描述: {resource.description}</span>
-              <span>API: {resource.urls}</span>
-            </div>
+            <Space key={resource.id} >
+              <Tag color="#2db7f5">{resource.description}</Tag>
+            </Space>
           ))}
         </>
       ),

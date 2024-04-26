@@ -11,6 +11,15 @@ export class result {
     this.data = data
   }
 }
+export type users = {
+  userName?: string;
+  id?: string;
+  password: string;
+  enable: any;
+  locked: any;
+  current:any;
+  size:any;
+};
 export type resources = {
   current: string
   description: string

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, FormProps, message, Modal, Select, SelectProps, Space, TableProps, Tooltip, TreeSelect } from 'antd';
+import { Button, FormProps, message, Modal, Select, SelectProps, Space, TableProps, Tag, Tooltip, TreeSelect } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import roleService from "../service/role"
 
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
-import { ArrayToTree, isAuth, role, route } from '../common';
+import { ArrayToTree, isAuth, resources, role, route } from '../common';
 const options: SelectProps['options'] = [];
 
 const handleChange = (value: string[]) => {
@@ -27,6 +27,8 @@ interface Item {
   id: string;
   name?: string;
   description: string;
+  resources: Array<string>
+  routeIds: Array<string>
 }
 //表格数据
 const originData: any[] = [];
@@ -41,55 +43,23 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   children: React.ReactNode;
 }
 
-const EditableCell: React.FC<EditableCellProps> = ({
-  editing,
-  dataIndex,
-  title,
-  inputType,
-  record,
-  index,
-  children,
-  ...restProps
-}) => {
-  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
-
-  return (
-    <td {...restProps}>
-      {editing ? (
-        <Form.Item
-          name={dataIndex}
-          style={{ margin: 0 }}
-          rules={[
-            {
-              required: true,
-              message: `Please Input ${title}!`,
-            },
-          ]}
-        >
-          {inputNode}
-        </Form.Item>
-      ) : (
-        children
-      )}
-    </td>
-  );
-};
 const { SHOW_PARENT } = TreeSelect;
 
-
-
-
 const Role: React.FC = () => {
-  //路由信息
-  const [routes, setRoutes] = useState(Array<string>);
-  const [treeData, setTreeData] = useState([])
+  const [treeData, setTreeData] = useState([]);
+  const [editingKey, setEditingKey] = useState('');
+  const [data, setData] = useState(originData);
+  const [form] = Form.useForm();
+  const [open, setOpen] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [total, setTotal] = useState(0);
   const onChange = (newValue: string[]) => {
-    console.log('onChange ', newValue);
-    setRoutes(newValue);
+
+    console.log('onChange ', newValue.filter((v: string) => v !== undefined));
   };
+  //权限树
   const tProps = {
     treeData,
-    routes,
     onChange,
     treeCheckable: true,
     showCheckedStrategy: SHOW_PARENT,
@@ -98,8 +68,54 @@ const Role: React.FC = () => {
       width: '100%',
     },
   };
+  //修改权限树
+  const tProps2 = {
+    treeData,
+    onChange,
+    treeCheckable: true,
+    showCheckedStrategy: SHOW_PARENT,
+    placeholder: '请选择角色权限',
+    style: {
+      width: '100%',
+    },
+  };
+  // 编辑的表单
+  const EditableCell: React.FC<EditableCellProps> = ({
+    editing,
+    dataIndex,
+    title,
+    inputType,
+    record,
+    index,
+    children,
+    ...restProps
+  }) => {
+    let inputNode = <Input />;
+    if (title === "权限") {
+      inputNode = <TreeSelect allowClear popupMatchSelectWidth={200} treeDefaultExpandAll    {...tProps2} />// 默认展开所有节点   
+    }
 
-
+    return (
+      <td {...restProps}>
+        {editing ? (
+          <Form.Item
+            name={dataIndex === "resources" ? "routeIds" : dataIndex}
+            style={{ margin: 0 }}
+            rules={[
+              {
+                required: true,
+                message: `请输入 ${title}!`,
+              },
+            ]}
+          >
+            {inputNode}
+          </Form.Item>
+        ) : (
+          children
+        )}
+      </td>
+    );
+  };
   //初始化数据
   useEffect(() => {
     init();
@@ -107,8 +123,6 @@ const Role: React.FC = () => {
   }, []);
 
 
-  // model
-  const [open, setOpen] = useState(false);
   const showModal = () => {
     setOpen(true);
   };
@@ -117,8 +131,6 @@ const Role: React.FC = () => {
   };
 
   // 表格代码
-  const [data, setData] = useState(originData);
-
   const init = async () => {
     const res = await roleService.queryPage({});
     setData(res.data.list);
@@ -136,7 +148,6 @@ const Role: React.FC = () => {
   const cancel = () => {
     setEditingKey('');
   };
-  const [messageApi, contextHolder] = message.useMessage();
 
   //查询
   const onFinish: FormProps<FieldType>["onFinish"] = async (values: FieldType) => {
@@ -166,16 +177,15 @@ const Role: React.FC = () => {
       init()
     }
   };
-  const [form] = Form.useForm();
 
-  const [editingKey, setEditingKey] = useState('');
+
 
   const isEditing = (record: Item) => record.id === editingKey;
   const edit = (record: Partial<Item> & { id: React.Key }) => {
-    form.setFieldsValue({ name: '', enable: '', locked: '', ...record });
+    form.setFieldsValue({ resources: {}, ...record });
     setEditingKey(record.id);
   };
-  const [total, setTotal] = useState(0);
+
   const pageChange = async (page: number, size: number) => {
     const { data } = await roleService.queryPage({ current: page, size: size })
     setData(data.list)
@@ -183,14 +193,14 @@ const Role: React.FC = () => {
   //删除
   const update = async (id: any) => {
     if (window.confirm("您确定要删除这条记录吗？")) {
-     
+
       const res = await roleService.remove({}, id)
-      if(isAuth(res, messageApi)){
+      if (isAuth(res, messageApi)) {
         let newData = data.filter((v) => v.id != id)
         setData(newData);
         init();
       }
-     
+
     }
   }
 
@@ -210,8 +220,14 @@ const Role: React.FC = () => {
         });
         setData(newData);
         setEditingKey('');
+        console.log(row);
+
         const res = await roleService.update(row)
-        isAuth(res, messageApi);
+        if (isAuth(res, messageApi)) {
+         
+        }
+        init()
+
       } else {
         newData.push(row);
         setData(newData);
@@ -226,21 +242,28 @@ const Role: React.FC = () => {
     {
       title: 'id',
       dataIndex: 'id',
-
+      key: "id",
       editable: false,
     },
     {
       title: '角色名',
       dataIndex: 'name',
-
+      key: "name",
       editable: true,
     },
     {
       title: '描述',
       dataIndex: 'description',
+      key: "description",
       editable: true,
     },
-
+    {
+      title: '权限',
+      dataIndex: 'resources',
+      key: "resources",
+      editable: true,
+      render: (resources: Array<resources>) => (resources.map((v, i) => <Tag color="#2db7f5">{i + 1}.{v.description}</Tag>))
+    },
     {
       title: '操作',
       dataIndex: '操作',
@@ -311,7 +334,7 @@ const Role: React.FC = () => {
             <Input></Input>
           </Form.Item>
           <Form.Item<FieldType> name="routeIds" label="角色权限" >
-            <TreeSelect {...tProps} />
+            <TreeSelect  {...tProps} />
           </Form.Item>
           <Button type="primary" htmlType="submit" >
             提交

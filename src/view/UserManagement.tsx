@@ -1,22 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Flex, FormProps, message, Modal, TableProps, Tooltip } from 'antd';
+import { Button, Flex, FormProps, message, Modal, Select, TableProps, Tooltip } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import userService from "../service/user"
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
-import { isAuth } from '../common';
-type FieldType = {
-  userName?: string;
-  id?: string;
-  password: string;
-  enable: string;
-  locked: string;
-};
+import { isAuth, users } from '../common';
+
 interface Item {
   id: string;
   userName: string;
-  enable: number;
-  locked: number;
+  enable: any;
+  locked: any;
 }
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   editing: boolean;
@@ -30,48 +24,73 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
 const originData: any[] = [];
 
 
-const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo: any) => {
+const onFinishFailed: FormProps<users>["onFinishFailed"] = (errorInfo: any) => {
   console.log('Failed:', errorInfo);
 };
 
 
 
 
-const EditableCell: React.FC<EditableCellProps> = ({
-  editing,
-  dataIndex,
-  title,
-  inputType,
-  record,
-  index,
-  children,
-  ...restProps
-}) => {
-  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
 
-  return (
-    <td {...restProps}>
-      {editing ? (
-        <Form.Item
-          name={dataIndex}
-          style={{ margin: 0 }}
-          rules={[
-            {
-              required: true,
-              message: `Please Input ${title}!`,
-            },
-          ]}
-        >
-          {inputNode}
-        </Form.Item>
-      ) : (
-        children
-      )}
-    </td>
-  );
-};
 
 const User: React.FC = () => {
+  const EditableCell: React.FC<EditableCellProps> = ({
+    editing,
+    dataIndex,
+    title,
+    inputType,
+    record,
+    index,
+    children,
+    ...restProps
+  }) => {
+    let inputNode = <Input />;
+    if (title === "启用") {
+      inputNode = <Select options={
+        [
+          {
+            value: 1,
+            label: '正常',
+          },
+          {
+            value: 0,
+            label: '禁用',
+          },
+        ]
+      } onChange={(value) => { setEnable(value) }} />
+    } else if (title === "锁定") {
+      inputNode = <Select options={[
+        {
+          value: 1,
+          label: '是',
+        },
+        {
+          value: 0,
+          label: '否',
+        },
+      ]} onChange={(value) => setLocked(value)} />
+    }
+    return (
+      <td {...restProps}>
+        {editing ? (
+          <Form.Item
+            name={dataIndex}
+            style={{ margin: 0 }}
+            rules={[
+              {
+                required: true,
+                message: `请输入 ${title}!`,
+              },
+            ]}
+          >
+            {inputNode}
+          </Form.Item>
+        ) : (
+          children
+        )}
+      </td>
+    );
+  };
   // model
   const [open, setOpen] = useState(false);
   const showModal = () => {
@@ -80,13 +99,27 @@ const User: React.FC = () => {
   const handleCancel = () => {
     setOpen(false);
   };
-
+  const [enable, setEnable] = useState(0)
+  const [locked, setLocked] = useState(0)
   // 表格代码
   const [data, setData] = useState(originData);
 
   const init = async () => {
     const res = await userService.queryPage({});
-    setData(res.data.list)
+    const users = res.data.list.map((el: users) => {
+      if (el.enable === 1) {
+        el.enable = "正常"
+      } else {
+        el.enable = "禁用"
+      }
+      if (el.locked === 1) {
+        el.locked = "是"
+      } else {
+        el.locked = "否"
+      }
+      return el;
+    })
+    setData(users)
     setTotal(res.data.total)
   }
   const cancel = () => {
@@ -96,15 +129,29 @@ const User: React.FC = () => {
   useEffect(() => {
     init();
   }, []);
+
   //查询
-  const onFinish: FormProps<FieldType>["onFinish"] = (values: FieldType) => {
+  const onFinish: FormProps<users>["onFinish"] = (values: users) => {
     console.log('Failed:', values);
     if (values.id === undefined && values.userName === undefined && values.enable === undefined && values.locked === undefined) {
       init();
       return;
     }
     userService.queryPage({ id: values.id, userName: values.userName, enable: values.enable, locked: values.locked }).then((res: any) => {
-      setData(res.data.list)
+      const users = res.data.list.map((el: users) => {
+        if (el.enable === 1) {
+          el.enable = "正常"
+        } else {
+          el.enable = "禁用"
+        }
+        if (el.locked === 1) {
+          el.locked = "是"
+        } else {
+          el.locked = "否"
+        }
+        return el;
+      })
+      setData(users)
     })
 
   };
@@ -112,10 +159,23 @@ const User: React.FC = () => {
   const [total, setTotal] = useState(0);
   const pageChange = async (page: number, size: number) => {
     const { data } = await userService.queryPage({ current: page, size: size })
-    setData(data.list)
+    const users = data.list.map((el: users) => {
+      if (el.enable === 1) {
+        el.enable = "正常"
+      } else {
+        el.enable = "禁用"
+      }
+      if (el.locked === 1) {
+        el.locked = "是"
+      } else {
+        el.locked = "否"
+      }
+      return el;
+    })
+    setData(users)
   }
   //添加用户
-  const onAddFinish: FormProps<FieldType>["onFinish"] = async (values: FieldType) => {
+  const onAddFinish: FormProps<users>["onFinish"] = async (values: users) => {
 
     if (values.password === undefined && values.userName === undefined) {
       messageApi.open({
@@ -163,14 +223,33 @@ const User: React.FC = () => {
 
       const index = newData.findIndex((item) => key === item.id);
       if (index > -1) {
+        if (enable === 1) {
+          row.enable = "正常"
+        } else {
+          row.enable = "禁用"
+        }
+        if (locked === 1) {
+          row.locked = "是"
+        } else {
+          row.locked = "否"
+        }
         const item = newData[index];
         newData.splice(index, 1, {
           ...item,
           ...row,
         });
+
         setData(newData);
         setEditingKey('');
+
+        row.enable = enable
+
+        row.locked = locked
+        console.log(enable,locked);
+        
+
         const res = await userService.update(row)
+
         isAuth(res, messageApi);
       } else {
         newData.push(row);
@@ -268,10 +347,10 @@ const User: React.FC = () => {
           onFinish={onAddFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off" name="horizontal_login">
-          <Form.Item<FieldType> name="userName" label="用户名" >
+          <Form.Item<users> name="userName" label="用户名" >
             <Input></Input>
           </Form.Item>
-          <Form.Item<FieldType> name="password" label="密码" >
+          <Form.Item<users> name="password" label="密码" >
             <Input></Input>
           </Form.Item>
 
@@ -281,37 +360,72 @@ const User: React.FC = () => {
 
         </Form>
       </Modal>
-      <Flex vertical>
-        <Form className="marginBottom" initialValues={{ remember: true }}
-          onFinish={onFinish}
-          onFinishFailed={onFinishFailed}
-          autoComplete="off" layout="inline" name="horizontal_login">
-          <Form.Item<FieldType> name="id" label="ID" >
-            <Input></Input>
-          </Form.Item>
-          <Form.Item<FieldType> name="userName" label="用户名" >
-            <Input></Input>
-          </Form.Item>
-          <Form.Item<FieldType> name="enable" label="启用" >
-            <Input></Input>
-          </Form.Item>
-          <Form.Item<FieldType> name="locked" label="锁定" >
-            <Input></Input>
-          </Form.Item>
-          <Tooltip title="search">
-            <Button type="primary" icon={<SearchOutlined />} htmlType="submit" >
-              搜索
-            </Button>
-          </Tooltip>
-
-        </Form>
-        <Flex justify={"flex-end"}>
-          <Button className="marginLeft" type="primary">重置</Button>
-          <Button className="marginLeft" type="primary" onClick={showModal}>
-            添加
+      <Form className="marginBottom" initialValues={{ remember: true }}
+        onFinish={onFinish}
+        onFinishFailed={onFinishFailed}
+        autoComplete="off" layout="inline" name="horizontal_login">
+        <Form.Item<users> name="id" label="ID" >
+          <Input></Input>
+        </Form.Item>
+        <Form.Item<users> name="userName" label="用户名" >
+          <Input></Input>
+        </Form.Item>
+        <Form.Item<users> name="enable" label="启用" >
+          <Select
+            optionFilterProp="children"
+            style={{ width: 100 }}
+            onChange={(value:any) => {
+              setEnable(value)
+            }}
+            defaultValue={{
+              value: 1,
+              label: '正常',
+            }}
+            options={[
+              {
+                value: 1,
+                label: '正常',
+              },
+              {
+                value: 0,
+                label: '禁用',
+              },
+            ]}
+          />
+        </Form.Item>
+        <Form.Item<users> name="locked" label="锁定" >
+          <Select
+            optionFilterProp="children"
+            style={{ width: 100 }}
+            onChange={(value:any) => {
+              setLocked(value)
+            }}
+            defaultValue={ {
+              value: 0,
+              label: '否',
+            }}
+            options={[
+              {
+                value: 1,
+                label: '是',
+              },
+              {
+                value: 0,
+                label: '否',
+              },
+            ]}
+          />
+        </Form.Item>
+        <Tooltip title="search">
+          <Button type="primary" icon={<SearchOutlined />} htmlType="submit" >
+            搜索
           </Button>
-        </Flex>
-      </Flex>
+        </Tooltip>
+        <Button className="marginLeft" type="primary" onClick={showModal}>
+          添加
+        </Button>
+      </Form>
+
 
       <Form form={form} component={false}>
         {contextHolder}
