@@ -2,15 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Button, FormProps, message, Modal, Select, SelectProps, Space, TableProps, Tag, Tooltip, TreeSelect } from 'antd';
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from 'antd';
 import roleService from "../service/role"
-
 import "./view.css"
 import { SearchOutlined } from "@ant-design/icons"
 import { ArrayToTree, isAuth, resources, role, route } from '../common';
 const options: SelectProps['options'] = [];
 
-const handleChange = (value: string[]) => {
-  console.log(value);
-};
 //字段
 type FieldType = {
   id: string;
@@ -24,10 +20,10 @@ const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo: any) 
 };
 
 interface Item {
-  id: string;
+  id: any;
   name?: string;
   description: string;
-  resources: Array<string>
+  resources: Array<resources>
   routeIds: Array<string>
 }
 //表格数据
@@ -53,6 +49,7 @@ const Role: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [total, setTotal] = useState(0);
+  const [routes, setRoutes] = useState<Array<route>>();
   const onChange = (newValue: string[]) => {
 
     console.log('onChange ', newValue.filter((v: string) => v !== undefined));
@@ -92,7 +89,7 @@ const Role: React.FC = () => {
   }) => {
     let inputNode = <Input />;
     if (title === "权限") {
-      inputNode = <TreeSelect allowClear popupMatchSelectWidth={200} treeDefaultExpandAll    {...tProps2} />// 默认展开所有节点   
+      inputNode = <TreeSelect popupMatchSelectWidth={200} treeDefaultExpandAll    {...tProps2} />// 默认展开所有节点   
     }
 
     return (
@@ -130,7 +127,7 @@ const Role: React.FC = () => {
     setOpen(false);
   };
 
-  // 表格代码
+  // 初始化
   const init = async () => {
     const res = await roleService.queryPage({});
     setData(res.data.list);
@@ -142,6 +139,7 @@ const Role: React.FC = () => {
       parentId: r.parentId,
       children: [],
     }));
+    setRoutes(res.data.other.routes);
     setTreeData(ArrayToTree(route));
   }
 
@@ -182,7 +180,9 @@ const Role: React.FC = () => {
 
   const isEditing = (record: Item) => record.id === editingKey;
   const edit = (record: Partial<Item> & { id: React.Key }) => {
-    form.setFieldsValue({ resources: {}, ...record });
+    const resourceIds = record.resources?.map(res => res.id);
+    const routeIds = routes?.map(rou => resourceIds?.includes(rou.resourcesId) ? rou.id : null).filter(v => v !== null)
+    form.setFieldsValue({ routeIds: routeIds, ...record });
     setEditingKey(record.id);
   };
 
@@ -224,7 +224,7 @@ const Role: React.FC = () => {
 
         const res = await roleService.update(row)
         if (isAuth(res, messageApi)) {
-         
+
         }
         init()
 
@@ -282,6 +282,9 @@ const Role: React.FC = () => {
             </span>
           );
         } else {
+          if (record.id === 1) {
+            return;
+          }
           return (
             <div>
               <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
@@ -379,7 +382,7 @@ const Role: React.FC = () => {
           pagination={{
             onChange: pageChange,
             total: total,
-            pageSize: 7
+            pageSize: 7,
           }}
         />
       </Form>

@@ -31,7 +31,7 @@ export type resources = {
 export type role = {
   current: string
   description: string
-  id: string
+  id: any
   name: string
   size: string
 }
@@ -43,6 +43,7 @@ export type route = {
   path: string
   size: string
   children: Array<route>
+  resourcesId:any
 }
 export const isAuth = (res: result, messageApi: MessageInstance):boolean => {
   if (res.code === '403') {

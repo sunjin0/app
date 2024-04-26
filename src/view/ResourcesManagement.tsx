@@ -109,7 +109,7 @@ const Resources: React.FC = () => {
 
     setData(res.data.list);
     setTotal(res.data.total)
-    const role = res.data.other.roles.map((el: any) => ({ label: el.description, value: el.id }))
+    const role = res.data.other.roles.map((el: any) => ({ label: el.description, value: el.id })).filter((v:any)=>v.value!==1)
     setRoles(role)
     const users = res.data.other.users.map((el: any) => ({ label: el.userName, value: el.id }))
     setUsers(users)
@@ -259,7 +259,7 @@ const Resources: React.FC = () => {
       ),
     },
     {
-      title: '资源',
+      title: '权限',
       dataIndex: 'resources',
       key: 'resources',
       editable: true,
